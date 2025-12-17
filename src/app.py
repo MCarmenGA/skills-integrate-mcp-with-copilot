@@ -10,6 +10,7 @@ from fastapi.staticfiles import StaticFiles
 from fastapi.responses import RedirectResponse
 import os
 from pathlib import Path
+import json
 
 app = FastAPI(title="Mergington High School API",
               description="API for viewing and signing up for extracurricular activities")
@@ -18,6 +19,10 @@ app = FastAPI(title="Mergington High School API",
 current_dir = Path(__file__).parent
 app.mount("/static", StaticFiles(directory=os.path.join(Path(__file__).parent,
           "static")), name="static")
+
+# Load teachers from JSON
+with open(os.path.join(current_dir, "teachers.json")) as f:
+    teachers = json.load(f)
 
 # In-memory activity database
 activities = {
@@ -78,9 +83,12 @@ activities = {
 }
 
 
-@app.get("/")
-def root():
-    return RedirectResponse(url="/static/index.html")
+@app.post("/login")
+def login(username: str, password: str):
+    if username in teachers and teachers[username] == password:
+        return {"success": True, "message": "Logged in as admin"}
+    else:
+        raise HTTPException(status_code=401, detail="Invalid credentials")sponse(url="/static/index.html")
 
 
 @app.get("/activities")
